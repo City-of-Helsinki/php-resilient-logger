@@ -4,17 +4,13 @@ namespace ResilientLogger\Handler;
 
 use Monolog\LogRecord;
 use Monolog\Handler\AbstractProcessingHandler;
-use ResilientLogger\Submitter\AbstractSubmitter;
+use ResilientLogger\Sources\AbstractLogSource;
 
 class ResilientLogHandler extends AbstractProcessingHandler {
-  protected AbstractSubmitter $submitter;
-
   /**
-   * @param AbstractSubmitter $submitter
+   * @param class-string<AbstractLogSource> $logSource
    */
-  public function __construct(AbstractSubmitter $submitter) {
-    $this->submitter = $submitter;
-  }
+  public function __construct(protected string $logSource) {}
 
   protected function write(LogRecord $record): void {
     $extras = [
@@ -22,7 +18,7 @@ class ResilientLogHandler extends AbstractProcessingHandler {
       'record_time' => $record->datetime->format('U'),
     ];
 
-    $this->submitter->submit(
+    $this->logSource::create(
       $record->level->toRFC5424Level(),
       $record->message,
       array_merge($record->context, $extras)
