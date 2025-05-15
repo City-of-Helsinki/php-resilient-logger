@@ -1,17 +1,17 @@
 <?php
 
-namespace ResilientLogger\Facade;
+namespace ResilientLogger\Sources;
 
-interface AbstractLogFacade {
+interface AbstractLogSource {
   public function getId(): int;
   public function getLevel(): int;
   public function getMessage(): mixed;
   public function getContext(): array;
   public function isSent(): bool;
   public function markSent(): void;
-  public static function create(int $level, mixed $message, array $context = []): AbstractLogFacade;
+  public static function create(int $level, mixed $message, array $context = []): ?AbstractLogSource;
 
-  /** @return \Generator<AbstractLogFacade> */
+  /** @return \Generator<AbstractLogSource> */
   public static function getUnsentEntries(int $chunkSize): \Generator;
   public static function clearSentEntries(int $daysToKeep): void;
 }

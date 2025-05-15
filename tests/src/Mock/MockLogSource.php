@@ -2,16 +2,16 @@
 
 namespace ResilientLogger\Tests\Mock;
 
-use ResilientLogger\Facade\AbstractLogFacade;
+use ResilientLogger\Sources\AbstractLogSource;
 
-class MockLogFacade implements AbstractLogFacade {
+class MockLogSource implements AbstractLogSource {
   private int $id;
   private int $level;
   private string $message;
   private array $context;
   private bool $sent;
 
-  /** @var Array<MockLogFacade> */
+  /** @var Array<MockLogSource> */
   public static array $entries = [];
 
   private function __construct(int $id, int $level, string $message, array $context, bool $sent) {
@@ -46,18 +46,18 @@ class MockLogFacade implements AbstractLogFacade {
     $this->sent = true;
   }
 
-  public static function create(int $level, mixed $message, array $context = []): AbstractLogFacade {
+  public static function create(int $level, mixed $message, array $context = []): AbstractLogSource {
     $id = random_int(0, 10000);
-    $entry = new MockLogFacade($id, $level, $message, $context, false);
+    $entry = new MockLogSource($id, $level, $message, $context, false);
     
     self::$entries[] = $entry;
 
     return $entry;
   }
 
-  /** @return \Generator<AbstractLogFacade> */
+  /** @return \Generator<AbstractLogSource> */
   public static function getUnsentEntries(int $chunkSize): \Generator {
-    $entries = array_filter(self::$entries, function(AbstractLogFacade $entry) {
+    $entries = array_filter(self::$entries, function(AbstractLogSource $entry) {
       return !$entry->isSent();
     });
 
@@ -68,7 +68,7 @@ class MockLogFacade implements AbstractLogFacade {
 
   public static function clearSentEntries(int $daysToKeep): void {
     /** Mock will be ignoring days to keep, it's only relevant on actual implementation. */
-    self::$entries = array_filter(self::$entries, function(AbstractLogFacade $entry) {
+    self::$entries = array_filter(self::$entries, function(AbstractLogSource $entry) {
       return !$entry->isSent();
     });
   }
