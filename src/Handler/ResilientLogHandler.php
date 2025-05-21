@@ -23,7 +23,7 @@ class ResilientLogHandler extends AbstractProcessingHandler {
     $this->logSource::create(
       $record->level->toRFC5424Level(),
       $record->message,
-      array_merge($record->context, $extras)
+      array_merge($record->extra, $record->context, $extras)
     );
   }
 }
