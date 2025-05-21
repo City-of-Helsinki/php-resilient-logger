@@ -31,17 +31,17 @@ class ElasticsearchLogTarget extends AbstractLogTarget {
   protected function __construct(array $options) {
       parent::__construct($options);
       
-      $hostname = $options["es_host"] || "localhost";
-      $port = $options["es_port"] || 9200;
-      $scheme = $options["es_scheme"] || "https";
+      $hostname = $options["es_host"] ?? "localhost";
+      $port = $options["es_port"] ?? 9200;
+      $scheme = $options["es_scheme"] ?? "https";
       $username = $options["es_username"];
       $password = $options["es_password"];
       $index = $options["es_index"];
-      $hosts = ["{$scheme}://{$hostname}:{$port}"];
+      $host = "{$scheme}://{$hostname}:{$port}";
 
       $this->index = $index;
       $this->client = ClientBuilder::create()
-        ->setHosts($hosts)
+        ->setHosts([$host])
         ->setBasicAuthentication($username, $password)
         ->build();
   }
