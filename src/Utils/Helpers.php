@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ResilientLogger\Utils;
 
 use Monolog\Level;
+use ResilientLogger\Exceptions\MissingContextException;
 use ResilientLogger\Sources\AbstractLogSource;
 
 class Helpers {
@@ -51,6 +52,29 @@ class Helpers {
   static function contentHash(mixed $contents): string {
     $stringified = json_encode(self::createDeepSortedCopy($contents));
     return hash('sha256', $stringified);
+  }
+
+  /**
+   * @param array<mixed> $extra
+   *   Associative array of logger extras to be checked for keys
+   * @param array<string> $requiredFields
+   *   List of required fields that must exist in $extra
+   * 
+   * @throws MissingContextException
+   */
+  static function assertRequiredExtras(array $extra, array $requiredFields) {
+    /** @var array<string> $missingFields */
+    $missingFields = [];
+
+    foreach ($requiredFields as $requiredField) {
+      if (!array_key_exists($requiredField, $extra)) {
+        $missingFields[] = $requiredField;
+      }
+    }
+
+    if ($missingFields) {
+      throw new MissingContextException($missingFields);
+    }
   }
 }
 
