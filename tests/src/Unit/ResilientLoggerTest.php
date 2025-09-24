@@ -17,11 +17,9 @@ class ResilientLoggerTest extends TestCase {
     $options = [
       "sources" => [["class" => MockLogSource::class]],
       "targets" => [["class" => MockLogTarget::class]],
-      "batchLimit" => 5000,
-      "chunkSize" => 500,
-      "storeOldEntriesDays" => 30,
-      "nextSubmitAt" => null,
-      "nextClearAt" => null
+      "batch_limit" => 5000,
+      "chunk_size" => 500,
+      "store_old_entries_days" => 30,
     ];
 
     $this->resilientLogger = ResilientLogger::create($options);

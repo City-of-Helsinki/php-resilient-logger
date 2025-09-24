@@ -2,6 +2,7 @@
 
 namespace ResilientLogger\Tests\Mock;
 
+use DateTime;
 use ResilientLogger\Sources\AbstractLogSource;
 
 class MockLogSource implements AbstractLogSource {
@@ -26,16 +27,22 @@ class MockLogSource implements AbstractLogSource {
     return $this->id;
   }
 
-  public function getLevel(): int {
-    return $this->level;
-  }
-
-  public function getMessage(): mixed {
-    return $this->message;
-  }
-
-  public function getContext(): array {
-    return $this->context;
+  public function getDocument(): array {
+    $now = new DateTime();
+    return [
+      "@timestamp" => $now,
+      "audit_event" => [
+        "actor" => ["value" => "dummy_actor"],
+        "date_time" => $now,
+        "operation" => "test_operation",
+        "origin" => "test_origin",
+        "target" => ["value" => "test_target"],
+        "environment" => "test_environment",
+        "message" => $this->message,
+        "level" => $this->level,
+        "extra" => $this->context,
+      ]
+    ];
   }
 
   public function isSent(): bool {

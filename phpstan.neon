@@ -1,0 +1,16 @@
+parameters:
+  fileExtensions:
+      - php
+      - module
+      - install
+  paths:
+    - src
+    - tests
+  excludePaths:
+    - vendor
+  level: 5
+  treatPhpDocTypesAsCertain: false
+  ignoreErrors:
+    -
+      message: '#^Unsafe usage of new static#'
+      path: src/Targets/AbstractLogTarget.php

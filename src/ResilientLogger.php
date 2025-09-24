@@ -6,15 +6,22 @@ namespace ResilientLogger;
 
 use ResilientLogger\Sources\AbstractLogSource;
 use ResilientLogger\Targets\AbstractLogTarget;
+use ResilientLogger\Types;
+use ResilientLogger\Utils\Helpers;
 
+/**
+ * @phpstan-import-type ResilientLoggerOptions from Types
+ */
 class ResilientLogger {
-  private const DEFAULT_OPTIONS = [
-    'sources' => [
-      [ "class" => 'Path\To\LogSource' ]
-    ],
-    'targets' => [
-      [ "class" => 'Path\To\LogTarget' ]
-    ],
+  /**
+   * This entry provides default values AND acts as a source of truth
+   * for filtering out unknown entries out of user provided options.
+   * 
+   * @var ResilientLoggerOptions $DEFAULT_OPTIONS
+   */
+  private static array $DEFAULT_OPTIONS = [
+    'sources' => [],
+    'targets' => [],
     'batch_limit' => 5000,
     'chunk_size' => 500,
     'store_old_entries_days' => 30,
@@ -37,33 +44,19 @@ class ResilientLogger {
 
 
   /**
-   * @param array{
-   *   sources: array<
-   *     array{
-   *       class: class-string<AbstractLogSource>,
-   *     }
-   *   >,
-   *   targets: array<
-   *     array{
-   *       class: class-string<AbstractLogTarget>,
-   *     }
-   *   >,
-   *   store_old_entries_days: int,
-   *   batch_limit: int,
-   *   chunk_size: int,
-   * } $options
+   * @param ResilientLoggerOptions $options
    */
   static function create(array $options) {
-    $options = self::mergeOptions($options, self::DEFAULT_OPTIONS);
+    $options = Helpers::mergeOptions($options, self::$DEFAULT_OPTIONS);
 
     /** @var class-string<AbstractLogSource>[] $sources */
     $sources = [];
 
-    /** @var AbstractLogTarget[] $targets */
-    $targets = [];
+    if (empty($options["sources"])) {
+      throw new \Exception("'sources' section of options is either missing or empty.");
+    }
 
     foreach ($options["sources"] as $source) {
-      /** @var class-string<AbstractLogSource> $sourceClassName */
       $sourceClassName = $source["class"];
 
       if (!is_subclass_of($sourceClassName, AbstractLogSource::class)) {
@@ -73,8 +66,14 @@ class ResilientLogger {
       $sources[] = $sourceClassName;
     }
 
+    /** @var AbstractLogTarget[] $targets */
+    $targets = [];
+
+    if (empty($options["targets"])) {
+      throw new \Exception("'targets' section of options is either missing or empty.");
+    }
+
     foreach ($options["targets"] as $target) {
-      /** @var class-string<AbstractLogTarget> $targetClassName */
       $targetClassName = $target["class"];
 
       if (!is_subclass_of($targetClassName, AbstractLogTarget::class)) {
@@ -106,7 +105,7 @@ class ResilientLogger {
   }
 
   /**
-   * @return string[]:
+   * @return array<int|string, bool>
    */
   public function submitUnsentEntries(): array {
     $results = [];
@@ -121,9 +120,9 @@ class ResilientLogger {
 
       if ($result) {
         $entry->markSent();
-        $results[$entry->getId()] = $result;
       }
 
+      $results[$entry->getId()] = $result;
       $count++;
     }
 
@@ -145,25 +144,5 @@ class ResilientLogger {
     foreach ($this->sources as $source) {
       $source::clearSentEntries($this->storeOldEntriesDays);
     }
-  }
-
-  /**
-   * @template T
-   * @param T $options
-   * @param array $defaultOptions
-   * @return T
-   */
-  private static function mergeOptions(array $options, array $defaultOptions): array {
-    $merged = [];
-
-    foreach ($defaultOptions as $key => $value) {
-      if (array_key_exists($key, $options)) {
-        $merged[$key] = $options[$key];
-      } else {
-        $merged[$key] = $value;
-      }
-    }
-
-    return $merged;
   }
 }

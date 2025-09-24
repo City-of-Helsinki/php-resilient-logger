@@ -21,14 +21,17 @@ class ResilientLogHandlerTest extends TestCase {
 
   public function testSubmit() {
     $expectedMessage = "Hello World";
-    $expectedContext = ["a" => "b", "c" => "d"];
+    $expectedContext = ["a" => "b", "c" => "d", "e" => "f"];
 
     $this->logger->info($expectedMessage, $expectedContext);
     $entry = MockLogSource::$entries[count(MockLogSource::$entries) - 1];
 
-    $actualMessage = $entry->getMessage();
-    $actualContext = $entry->getContext();
+    $document = $entry->getDocument();
+    $auditEvent = $document["audit_event"];
+    $actualMessage = $auditEvent["message"];
+    $actualContext = $auditEvent["extra"];
 
+    $this->assertInstanceOf(\DateTimeInterface::class, $document["@timestamp"]);
     $this->assertEquals($expectedMessage, $actualMessage);
 
     foreach ($expectedContext as $key => $expectedValue) {
