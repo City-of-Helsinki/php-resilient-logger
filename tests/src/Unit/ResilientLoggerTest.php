@@ -17,6 +17,8 @@ class ResilientLoggerTest extends TestCase {
     $options = [
       "sources" => [["class" => MockLogSource::class]],
       "targets" => [["class" => MockLogTarget::class]],
+      "environment" => "test",
+      "origin" => "test",
       "batch_limit" => 5000,
       "chunk_size" => 500,
       "store_old_entries_days" => 30,

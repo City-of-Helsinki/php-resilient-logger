@@ -53,6 +53,10 @@ class MockLogSource implements AbstractLogSource {
     $this->sent = true;
   }
 
+  public static function configure(mixed $options): void {
+    
+  }
+
   public static function create(int $level, mixed $message, array $context = []): AbstractLogSource {
     $id = random_int(0, 10000);
     $entry = new MockLogSource($id, $level, $message, $context, false);

@@ -7,6 +7,7 @@ namespace ResilientLogger\Sources;
 use \ResilientLogger\Sources\Types;
 
 /**
+ * @phpstan-import-type LogSourceConfig from Types
  * @phpstan-import-type AuditLogDocument from Types
  */
 interface AbstractLogSource {
@@ -31,6 +32,13 @@ interface AbstractLogSource {
    * Marks the entry as sent
    */
   public function markSent(): void;
+
+  /**
+   * Configures the source class.
+   * 
+   * @param LogSourceConfig $config
+   */
+  public static function configure(mixed $config): void;
 
   /**
    * Creates new log source entry if it's allowed.

@@ -3,6 +3,11 @@
 namespace ResilientLogger\Sources;
 
 /**
+ * @phpstan-type LogSourceConfig array{
+ *   environment: string,
+ *   origin: string,
+ * }
+ *
  * @phpstan-type AuditLogEvent array{
  *   actor: array,
  *   date_time: \DateTimeInterface,

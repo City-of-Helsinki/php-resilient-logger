@@ -6,11 +6,13 @@ namespace ResilientLogger;
 
 use ResilientLogger\Sources\AbstractLogSource;
 use ResilientLogger\Targets\AbstractLogTarget;
-use ResilientLogger\Types;
+use ResilientLogger\Types as Type;
+use ResilientLogger\Sources\Types as SourceTypes;
 use ResilientLogger\Utils\Helpers;
 
 /**
  * @phpstan-import-type ResilientLoggerOptions from Types
+ * @phpstan-import-type LogSourceConfig from SourceTypes
  */
 class ResilientLogger {
   /**
@@ -22,6 +24,8 @@ class ResilientLogger {
   private static array $DEFAULT_OPTIONS = [
     'sources' => [],
     'targets' => [],
+    'environment' => 'dev',
+    'origin' => 'unknown',
     'batch_limit' => 5000,
     'chunk_size' => 500,
     'store_old_entries_days' => 30,
@@ -52,6 +56,12 @@ class ResilientLogger {
     /** @var class-string<AbstractLogSource>[] $sources */
     $sources = [];
 
+    /** @var LogSourceConfig $sourceOptions */
+    $sourceConfig = [
+      "environment" => $options["environment"],
+      "origin" => $options["origin"]
+    ];
+
     if (empty($options["sources"])) {
       throw new \Exception("'sources' section of options is either missing or empty.");
     }
@@ -63,6 +73,7 @@ class ResilientLogger {
         throw new \Exception(sprintf("%s is not sub-class of AbstractLogSource", $sourceClassName));
       }
 
+      $sourceClassName::configure($sourceConfig);
       $sources[] = $sourceClassName;
     }
 

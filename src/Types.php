@@ -17,6 +17,8 @@ use ResilientLogger\Targets\AbstractLogTarget;
  *       class: class-string<AbstractLogTarget>,
  *     }
  *   >,
+ *   environment: string,
+ *   origin: string,
  *   store_old_entries_days: int,
  *   batch_limit: int,
  *   chunk_size: int,
