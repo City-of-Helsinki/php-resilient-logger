@@ -26,6 +26,13 @@ class ElasticsearchLogTarget extends AbstractLogTarget {
   private string $index;
   private Client $client;
 
+  private array $defaultOptions = [
+    'es_url' => null,
+    'es_host' => 'localhost',
+    'es_port' => 9200,
+    'es_scheme' => 'https',
+  ];
+
   /**
    * @param array{
    *   es_username: string,
@@ -49,11 +56,7 @@ class ElasticsearchLogTarget extends AbstractLogTarget {
         'es_host' => $es_host,
         'es_port' => $es_port,
         'es_scheme' => $es_scheme,
-      ) = $options;
-
-      $es_host ??= 'localhost';
-      $es_port ??= 9200;
-      $es_scheme ??= 'https';
+      ) = $options + $this->defaultOptions;
 
       if (!empty($es_url)) {
         if (strpos($es_url, "://") === false) {
