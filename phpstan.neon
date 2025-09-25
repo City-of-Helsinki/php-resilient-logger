@@ -14,3 +14,6 @@ parameters:
     -
       message: '#^Unsafe usage of new static#'
       path: src/Targets/AbstractLogTarget.php
+    -
+      message: '#^Unsafe usage of new static#'
+      path: src/ResilientLogger.php      

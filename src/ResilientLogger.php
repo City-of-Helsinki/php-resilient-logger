@@ -50,13 +50,13 @@ class ResilientLogger {
   /**
    * @param ResilientLoggerOptions $options
    */
-  static function create(array $options) {
+  static function create(array $options): static {
     $options = Helpers::mergeOptions($options, self::$DEFAULT_OPTIONS);
 
     /** @var class-string<AbstractLogSource>[] $sources */
     $sources = [];
 
-    /** @var LogSourceConfig $sourceOptions */
+    /** @var LogSourceConfig $sourceConfig */
     $sourceConfig = [
       "environment" => $options["environment"],
       "origin" => $options["origin"]
@@ -94,7 +94,7 @@ class ResilientLogger {
       $targets[] = $targetClassName::create($target);
     }
 
-    return new ResilientLogger(
+    return new static(
       $sources,
       $targets,
       $options["batch_limit"],
