@@ -36,23 +36,23 @@ This ensures **logs are never lost**: if delivery fails, entries remain in stora
 
 ```mermaid
 flowchart TD
-    A[Log Generators] --> B[AbstractLogSource]
-    B --> C[ResilientLogger]
-    C --> D[Targets]
+    A["Log Generators"] --> B["AbstractLogSource"]
+    B --> C["ResilientLogger"]
+    C --> D["Targets"]
 
     subgraph Log Generators
-        A1[Monolog Handler (ResilientLogHandler)]
-        A2[Third-party Audit Library]
-        A3[Custom Application Code]
+        A1["Monolog Handler (ResilientLogHandler)"]
+        A2["Third-party Audit Library"]
+        A3["Custom Application Code"]
     end
     A1 --> A
     A2 --> A
     A3 --> A
 
     subgraph Targets
-        D1[Elasticsearch]
-        D2[HTTP Proxy]
-        D3[File Sink]
+        D1["Elasticsearch"]
+        D2["HTTP Proxy"]
+        D3["File Sink"]
     end
     D --> D1
     D --> D2
