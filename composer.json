@@ -6,7 +6,6 @@
     "prefer-stable": true,
     "require": {
         "php": "^8.1",
-        "phpspec/prophecy-phpunit": "^2.3",
         "monolog/monolog": "^3.9",
         "elasticsearch/elasticsearch": "^8"
     },
