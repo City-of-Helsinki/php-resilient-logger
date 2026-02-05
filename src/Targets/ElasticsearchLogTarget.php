@@ -12,8 +12,7 @@ use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
 
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
-
+use ResilientLogger\ResilientLogger;
 use \ResilientLogger\Sources\Types;
 
 /**
@@ -21,7 +20,6 @@ use \ResilientLogger\Sources\Types;
  */
 class ElasticsearchLogTarget extends AbstractLogTarget {
   private const ES_STATUS_CREATED = "created";
-  private static LoggerInterface $logger;
 
   private string $index;
   private Client $client;
@@ -71,10 +69,6 @@ class ElasticsearchLogTarget extends AbstractLogTarget {
 
       $parsed_host = "{$es_scheme}://{$es_host}:{$es_port}";
       
-      if (!isset(self::$logger)) {
-        self::$logger = new NullLogger();
-      }
-
       $this->index = $es_index;
       $this->client = ClientBuilder::create()
         ->setHosts([$parsed_host])
@@ -106,7 +100,8 @@ class ElasticsearchLogTarget extends AbstractLogTarget {
         * sent to the Elasticsearch.
         */
       if ($e->getResponse()->getStatusCode() == 409) {
-        self::$logger->warning(
+        $logger = ResilientLogger::getInternalLogger();
+        $logger->warning(
           "Skipping the document with key {$hash}, it's already submitted.",
           ["document" => $document],
         );
@@ -137,16 +132,13 @@ class ElasticsearchLogTarget extends AbstractLogTarget {
    * @return false
    */
   private function handleException(string $hash, array $document, \Exception $e) {
-    self::$logger->error("Entry with key {$hash} failed.", [
+    $logger = ResilientLogger::getInternalLogger();
+    $logger->error("Entry with key {$hash} failed.", [
       "document" => $document, 
       "message" => $e->getMessage(), 
       "stack_trace" => $e->getTraceAsString()
     ]);
 
     return false;
-  }
-
-  public static function setLogger(LoggerInterface $logger) {
-    self::$logger = $logger;
   }
 }
