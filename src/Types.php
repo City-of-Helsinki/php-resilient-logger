@@ -22,6 +22,8 @@ use ResilientLogger\Targets\AbstractLogTarget;
  *   store_old_entries_days: int,
  *   batch_limit: int,
  *   chunk_size: int,
+ *   submit_unsent_entries?: bool,
+ *   clear_sent_entries?: bool,
  * }
  */
 final class Types {}
