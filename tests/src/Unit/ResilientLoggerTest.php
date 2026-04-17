@@ -12,6 +12,7 @@ use ResilientLogger\Tests\Mock\MockLogTarget;
 #[CoversClass(ResilientLogger::class)]
 class ResilientLoggerTest extends TestCase {
   private ResilientLogger $resilientLogger;
+  private MockLogSource $source;
 
   public function setUp(): void {
     $options = [
@@ -25,6 +26,7 @@ class ResilientLoggerTest extends TestCase {
     ];
 
     $this->resilientLogger = ResilientLogger::create($options);
+    $this->source = new MockLogSource();
     MockLogSource::$entries = [];
     MockLogTarget::$entries = [];
   }
@@ -33,7 +35,7 @@ class ResilientLoggerTest extends TestCase {
     $numEntriesBefore = count(MockLogSource::$entries);
 
     for ($i = 0; $i < $numEntries; ++$i) {
-      MockLogSource::create(0, "Hello", ["idx" => $i]);
+      $this->source->create(0, "Hello", ["idx" => $i]);
     }
 
     $numEntriesAfter = $numEntriesBefore + $numEntries;

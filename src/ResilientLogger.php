@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace ResilientLogger;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use ResilientLogger\Sources\AbstractLogSource;
+use ResilientLogger\Sources\AbstractLogSourceEntry;
 use ResilientLogger\Targets\AbstractLogTarget;
 use ResilientLogger\Types as Type;
 use ResilientLogger\Sources\Types as SourceTypes;
@@ -24,15 +27,19 @@ class ResilientLogger {
   private static array $DEFAULT_OPTIONS = [
     'sources' => [],
     'targets' => [],
-    'environment' => 'dev',
-    'origin' => 'unknown',
+    'environment' => '',
+    'origin' => '',
     'batch_limit' => 5000,
     'chunk_size' => 500,
     'store_old_entries_days' => 30,
+    'submit_unsent_entries' => false,
+    'clear_sent_entries' => false,
   ];
 
+  private static ?LoggerInterface $internalLogger = null;
+
   /**
-   * @param class-string<AbstractLogSource>[] $sources
+   * @param AbstractLogSource[] $sources
    * @param AbstractLogTarget[] $targets
    * @param int $batchLimit
    * @param int $chunkSize
@@ -46,12 +53,39 @@ class ResilientLogger {
     private int $storeOldEntriesDays,
   ) {}
 
+  /**
+   * Define the configuration schema and validation rules.
+   * * @return array<string, array{callable, string}>
+   */
+  private static function getSchema(): array {
+      $isNonEmptyString = fn($input) => is_string($input) && trim($input) !== '';
+      $isNonEmptyList   = fn($input) => is_array($input) && !empty($input);
+
+      return [
+          'sources'     => [$isNonEmptyList,   'non-empty array'],
+          'targets'     => [$isNonEmptyList,   'non-empty array'],
+          'origin'      => [$isNonEmptyString, 'non-empty string'],
+          'environment' => [$isNonEmptyString, 'non-empty string'],
+      ];
+  }
 
   /**
    * @param ResilientLoggerOptions $options
    */
   static function create(array $options): static {
     $options = Helpers::mergeOptions($options, self::$DEFAULT_OPTIONS);
+
+    foreach (self::getSchema() as $key => $tuple) {
+      // Destructure the tuple into meaningful variables
+      [$validator, $label] = $tuple;
+      if (!isset($options[$key]) || !$validator($options[$key])) {
+        throw new \InvalidArgumentException(sprintf(
+          "Configuration error: '%s' must be a %s.",
+          $key,
+          $label
+        ));
+      }
+    }
 
     /** @var class-string<AbstractLogSource>[] $sources */
     $sources = [];
@@ -62,10 +96,6 @@ class ResilientLogger {
       "origin" => $options["origin"]
     ];
 
-    if (empty($options["sources"])) {
-      throw new \Exception("'sources' section of options is either missing or empty.");
-    }
-
     foreach ($options["sources"] as $source) {
       $sourceClassName = $source["class"];
 
@@ -73,16 +103,11 @@ class ResilientLogger {
         throw new \Exception(sprintf("%s is not sub-class of AbstractLogSource", $sourceClassName));
       }
 
-      $sourceClassName::configure($sourceConfig);
-      $sources[] = $sourceClassName;
+      $sources[] = new $sourceClassName(array_merge($source, $sourceConfig));
     }
 
     /** @var AbstractLogTarget[] $targets */
     $targets = [];
-
-    if (empty($options["targets"])) {
-      throw new \Exception("'targets' section of options is either missing or empty.");
-    }
 
     foreach ($options["targets"] as $target) {
       $targetClassName = $target["class"];
@@ -91,7 +116,7 @@ class ResilientLogger {
         throw new \Exception(sprintf("%s is not sub-class of AbstractLogTarget", $targetClassName));
       }
 
-      $targets[] = $targetClassName::create($target);
+      $targets[] = new $targetClassName($target);
     }
 
     return new static(
@@ -103,7 +128,19 @@ class ResilientLogger {
     );
   }
 
-  public function submit(AbstractLogSource $entry): bool {
+  public static function setInternalLogger(LoggerInterface $logger): void {
+    self::$internalLogger = $logger;
+  }
+
+  public static function getInternalLogger(): LoggerInterface {
+    if (self::$internalLogger === null) {
+      self::$internalLogger = new NullLogger();
+    }
+
+    return self::$internalLogger;
+  }
+
+  public function submit(AbstractLogSourceEntry $entry): bool {
     foreach ($this->targets as $target) {
       $submitted = $target->submit($entry);
 
@@ -141,11 +178,11 @@ class ResilientLogger {
   }
 
   /**
-   * @return \Generator<AbstractLogSource>
+   * @return \Generator<AbstractLogSourceEntry>
    */
   public function getUnsentEntries(): \Generator {
     foreach ($this->sources as $source) {
-      foreach ($source::getUnsentEntries($this->chunkSize) as $entry) {
+      foreach ($source->getUnsentEntries($this->chunkSize) as $entry) {
         yield $entry;
       }
     }
@@ -153,7 +190,7 @@ class ResilientLogger {
   
   public function clearSentEntries(): void {
     foreach ($this->sources as $source) {
-      $source::clearSentEntries($this->storeOldEntriesDays);
+      $source->clearSentEntries($this->storeOldEntriesDays);
     }
   }
 }

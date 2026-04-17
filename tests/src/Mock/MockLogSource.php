@@ -2,20 +2,17 @@
 
 namespace ResilientLogger\Tests\Mock;
 
-use DateTime;
 use ResilientLogger\Sources\AbstractLogSource;
+use ResilientLogger\Sources\AbstractLogSourceEntry;
 
-class MockLogSource implements AbstractLogSource {
+class MockLogSourceEntry implements AbstractLogSourceEntry {
   private int $id;
   private int $level;
   private string $message;
   private array $context;
   private bool $sent;
 
-  /** @var Array<MockLogSource> */
-  public static array $entries = [];
-
-  private function __construct(int $id, int $level, string $message, array $context, bool $sent) {
+  public function __construct(int $id, int $level, string $message, array $context, bool $sent) {
     $this->id = $id;
     $this->level = $level;
     $this->message = $message;
@@ -28,7 +25,7 @@ class MockLogSource implements AbstractLogSource {
   }
 
   public function getDocument(): array {
-    $now = new DateTime();
+    $now = new \DateTime();
     return [
       "@timestamp" => $now,
       "audit_event" => [
@@ -52,23 +49,28 @@ class MockLogSource implements AbstractLogSource {
   public function markSent(): void {
     $this->sent = true;
   }
+}
 
-  public static function configure(mixed $options): void {
-    
+class MockLogSource extends AbstractLogSource {
+  /** @var Array<MockLogSourceEntry> */
+  public static array $entries = [];
+
+  public function __construct() {
+    parent::__construct(["environment" => "local", "origin" => "test"]);
   }
 
-  public static function create(int $level, mixed $message, array $context = []): AbstractLogSource {
+  public function create(int $level, mixed $message, array $context = []): AbstractLogSourceEntry {
     $id = random_int(0, 10000);
-    $entry = new MockLogSource($id, $level, $message, $context, false);
+    $entry = new MockLogSourceEntry($id, $level, $message, $context, false);
     
     self::$entries[] = $entry;
 
     return $entry;
   }
 
-  /** @return \Generator<AbstractLogSource> */
-  public static function getUnsentEntries(int $chunkSize): \Generator {
-    $entries = array_filter(self::$entries, function(AbstractLogSource $entry) {
+  /** @return \Generator<AbstractLogSourceEntry> */
+  public function getUnsentEntries(int $chunkSize): \Generator {
+    $entries = array_filter(self::$entries, function(AbstractLogSourceEntry $entry) {
       return !$entry->isSent();
     });
 
@@ -77,9 +79,9 @@ class MockLogSource implements AbstractLogSource {
     }
   }
 
-  public static function clearSentEntries(int $daysToKeep): void {
+  public function clearSentEntries(int $daysToKeep): void {
     /** Mock will be ignoring days to keep, it's only relevant on actual implementation. */
-    self::$entries = array_filter(self::$entries, function(AbstractLogSource $entry) {
+    self::$entries = array_filter(self::$entries, function(AbstractLogSourceEntry $entry) {
       return !$entry->isSent();
     });
   }
