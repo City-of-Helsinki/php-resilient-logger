@@ -12,11 +12,11 @@ use ResilientLogger\Exceptions\MissingContextException;
 
 class ResilientLogHandler extends AbstractProcessingHandler {
   /**
-   * @param class-string<AbstractLogSource> $logSource
+   * @param AbstractLogSource $logSource
    * @param array<string> $requiredFields
    */
   public function __construct(
-    protected string $logSource,
+    protected AbstractLogSource $logSource,
     protected array $requiredFields = []
   ) {}
 
@@ -42,7 +42,7 @@ class ResilientLogHandler extends AbstractProcessingHandler {
       $this->requiredFields
     );
 
-    $this->logSource::create(
+    $this->logSource->create(
       $record->level->toRFC5424Level(),
       $record->message,
       $extras

@@ -2,21 +2,21 @@
 
 namespace ResilientLogger\Tests\Mock;
 
-use ResilientLogger\Sources\AbstractLogSource;
+use ResilientLogger\Sources\AbstractLogSourceEntry;
 use ResilientLogger\Targets\AbstractLogTarget;
 
 class MockLogTarget extends AbstractLogTarget {
   private bool $result;
 
-  /** @var Array<AbstractLogSource> */
+  /** @var Array<AbstractLogSourceEntry> */
   public static array $entries = [];
 
-  protected function __construct(array $options = []) {
+  public function __construct(array $options = []) {
     parent::__construct($options);
     $this->setResult(true);
   }
 
-  public function submit(AbstractLogSource $entry): bool {
+  public function submit(AbstractLogSourceEntry $entry): bool {
     if ($this->result) {
       self::$entries[] = $entry;
     }

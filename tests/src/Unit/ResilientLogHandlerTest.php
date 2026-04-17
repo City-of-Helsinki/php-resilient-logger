@@ -16,7 +16,7 @@ class ResilientLogHandlerTest extends TestCase {
 
   public function setUp(): void {
     $this->logger = new Logger('dummy_logger');
-    $this->logger->pushHandler(new ResilientLogHandler(MockLogSource::class));
+    $this->logger->pushHandler(new ResilientLogHandler(new MockLogSource()));
   }
 
   public function testSubmit() {

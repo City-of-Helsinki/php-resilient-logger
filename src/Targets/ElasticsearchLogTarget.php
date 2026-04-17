@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ResilientLogger\Targets;
 
-use ResilientLogger\Sources\AbstractLogSource;
+use ResilientLogger\Sources\AbstractLogSourceEntry;
 use ResilientLogger\Targets\AbstractLogTarget;
 use ResilientLogger\Utils\Helpers;
 use Elastic\Elasticsearch\ClientBuilder;
@@ -76,7 +76,7 @@ class ElasticsearchLogTarget extends AbstractLogTarget {
         ->build();
   }
 
-  public function submit(AbstractLogSource $entry): bool {
+  public function submit(AbstractLogSourceEntry $entry): bool {
     $document = $entry->getDocument();
     $hash = Helpers::contentHash($document);
 
