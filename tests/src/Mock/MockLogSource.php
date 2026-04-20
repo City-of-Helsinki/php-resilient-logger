@@ -51,26 +51,26 @@ class MockLogSourceEntry implements AbstractLogSourceEntry {
   }
 }
 
-class MockLogSource extends AbstractLogSource {
+class MockLogSource implements AbstractLogSource {
   /** @var Array<MockLogSourceEntry> */
-  public static array $entries = [];
+  public array $entries = [];
 
-  public function __construct() {
-    parent::__construct(["environment" => "local", "origin" => "test"]);
-  }
+  public function __construct(private array $config = []) {}
+
+  public function getConfig(): array { return $this->config; }
 
   public function create(int $level, mixed $message, array $context = []): AbstractLogSourceEntry {
     $id = random_int(0, 10000);
     $entry = new MockLogSourceEntry($id, $level, $message, $context, false);
     
-    self::$entries[] = $entry;
+    $this->entries[] = $entry;
 
     return $entry;
   }
 
   /** @return \Generator<AbstractLogSourceEntry> */
   public function getUnsentEntries(int $chunkSize): \Generator {
-    $entries = array_filter(self::$entries, function(AbstractLogSourceEntry $entry) {
+    $entries = array_filter($this->entries, function(AbstractLogSourceEntry $entry) {
       return !$entry->isSent();
     });
 
@@ -81,9 +81,21 @@ class MockLogSource extends AbstractLogSource {
 
   public function clearSentEntries(int $daysToKeep): void {
     /** Mock will be ignoring days to keep, it's only relevant on actual implementation. */
-    self::$entries = array_filter(self::$entries, function(AbstractLogSourceEntry $entry) {
+    $this->entries = array_filter($this->entries, function(AbstractLogSourceEntry $entry) {
       return !$entry->isSent();
     });
+  }
+}
+
+class MockLogSourceFactory {
+  public function __construct(private array $config = []) {}
+
+  public function instanceMethod(array $config = []): MockLogSource {
+    return new MockLogSource(array_merge($this->config, $config));
+  }
+
+  public static function staticMethod(array $config = []): MockLogSource {
+    return new MockLogSource($config);
   }
 }
 

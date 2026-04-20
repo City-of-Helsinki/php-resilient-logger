@@ -13,23 +13,23 @@ interface AbstractLogSourceEntry {
   /**
    * Returns the ID attached to this entry.
    */
-  public function getId(): int|string;
+  function getId(): int|string;
 
   /**
    * Returns the AuditLogDocument for given entry
    * 
    * @return AuditLogDocument
    **/
-  public function getDocument(): array;
+  function getDocument(): array;
 
   /**
    * Returns the boolean representing if the entry is sent or not.
    */
-  public function isSent(): bool;
+  function isSent(): bool;
 
   /**
    * Marks the entry as sent
    */
-  public function markSent(): void;
+  function markSent(): void;
 }
 ?>

@@ -13,10 +13,12 @@ use ResilientLogger\Tests\Mock\MockLogSource;
 #[CoversClass(ResilientLogHandler::class)]
 class ResilientLogHandlerTest extends TestCase {
   private Logger $logger;
+  private MockLogSource $source;
 
   public function setUp(): void {
     $this->logger = new Logger('dummy_logger');
-    $this->logger->pushHandler(new ResilientLogHandler(new MockLogSource()));
+    $this->source = new MockLogSource();
+    $this->logger->pushHandler(new ResilientLogHandler($this->source));
   }
 
   public function testSubmit() {
@@ -24,7 +26,7 @@ class ResilientLogHandlerTest extends TestCase {
     $expectedContext = ["a" => "b", "c" => "d", "e" => "f"];
 
     $this->logger->info($expectedMessage, $expectedContext);
-    $entry = MockLogSource::$entries[count(MockLogSource::$entries) - 1];
+    $entry = $this->source->entries[count($this->source->entries) - 1];
 
     $document = $entry->getDocument();
     $auditEvent = $document["audit_event"];

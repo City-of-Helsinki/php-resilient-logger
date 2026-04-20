@@ -12,6 +12,7 @@ use ResilientLogger\Targets\AbstractLogTarget;
 use ResilientLogger\Types as Type;
 use ResilientLogger\Sources\Types as SourceTypes;
 use ResilientLogger\Utils\Helpers;
+use ResilientLogger\Utils\ReflectHelpers;
 
 /**
  * @phpstan-import-type ResilientLoggerOptions from Types
@@ -69,6 +70,12 @@ class ResilientLogger {
       ];
   }
 
+  private static function getClassOrFactoryProp(array $config, string $context): mixed {
+      return $config['factory'] ?? $config['class'] ?? throw new \InvalidArgumentException(
+          "Log $context configuration missing 'factory' or 'class' key."
+      );
+  }
+
   /**
    * @param ResilientLoggerOptions $options
    */
@@ -87,36 +94,28 @@ class ResilientLogger {
       }
     }
 
-    /** @var class-string<AbstractLogSource>[] $sources */
+    /** @var AbstractLogSource[] $sources */
     $sources = [];
 
     /** @var LogSourceConfig $sourceConfig */
-    $sourceConfig = [
+    $commonConfig = [
       "environment" => $options["environment"],
       "origin" => $options["origin"]
     ];
 
     foreach ($options["sources"] as $source) {
-      $sourceClassName = $source["class"];
-
-      if (!is_subclass_of($sourceClassName, AbstractLogSource::class)) {
-        throw new \Exception(sprintf("%s is not sub-class of AbstractLogSource", $sourceClassName));
-      }
-
-      $sources[] = new $sourceClassName(array_merge($source, $sourceConfig));
+      $classOrFactory = self::getClassOrFactoryProp($source, "Source");
+      $factory = ReflectHelpers::createFactory($classOrFactory, AbstractLogSource::class);
+      $sources[] = $factory(array_merge($source, $commonConfig));
     }
 
     /** @var AbstractLogTarget[] $targets */
     $targets = [];
 
     foreach ($options["targets"] as $target) {
-      $targetClassName = $target["class"];
-
-      if (!is_subclass_of($targetClassName, AbstractLogTarget::class)) {
-        throw new \Exception(sprintf("%s is not sub-class of AbstractLogTarget", $targetClassName));
-      }
-
-      $targets[] = new $targetClassName($target);
+      $classOrFactory = self::getClassOrFactoryProp($target, "Target");
+      $factory = ReflectHelpers::createFactory($classOrFactory, AbstractLogTarget::class);
+      $targets[] = $factory(array_merge($target, $commonConfig));
     }
 
     return new static(
@@ -126,6 +125,24 @@ class ResilientLogger {
       $options["chunk_size"],
       $options["store_old_entries_days"]
     );
+  }
+
+  /**
+   * Returns list of configured log sources
+   * 
+   * @return AbstractLogSource[]
+   */
+  public function getSources(): array {
+    return $this->sources;
+  }
+
+  /**
+   * Returns list of configured log targets
+   * 
+   * @return AbstractLogTarget[]
+   */
+  public function getTargets(): array {
+    return $this->targets;
   }
 
   public static function setInternalLogger(LoggerInterface $logger): void {
