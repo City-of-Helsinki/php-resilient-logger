@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ResilientLogger\Targets;
 
-use ResilientLogger\Sources\AbstractLogSource;
+use ResilientLogger\Sources\AbstractLogSourceEntry;
 use ResilientLogger\Targets\AbstractLogTarget;
 use ResilientLogger\Utils\Helpers;
 use Elastic\Elasticsearch\ClientBuilder;
@@ -18,10 +18,11 @@ use \ResilientLogger\Sources\Types;
 /**
  * @phpstan-import-type AuditLogDocument from Types
  */
-class ElasticsearchLogTarget extends AbstractLogTarget {
+class ElasticsearchLogTarget implements AbstractLogTarget {
   private const ES_STATUS_CREATED = "created";
 
   private string $index;
+  private bool $required;
   private Client $client;
 
   private array $defaultOptions = [
@@ -43,9 +44,7 @@ class ElasticsearchLogTarget extends AbstractLogTarget {
    *   required?: bool,
    * } $options
    */
-  protected function __construct(array $options) {
-      parent::__construct($options);
-      
+  public function __construct(array $options) {
       list(
         'es_username' => $es_username,
         'es_password' => $es_password,
@@ -54,6 +53,7 @@ class ElasticsearchLogTarget extends AbstractLogTarget {
         'es_host' => $es_host,
         'es_port' => $es_port,
         'es_scheme' => $es_scheme,
+        'required' => $required,
       ) = $options + $this->defaultOptions;
 
       if (!empty($es_url)) {
@@ -69,6 +69,7 @@ class ElasticsearchLogTarget extends AbstractLogTarget {
 
       $parsed_host = "{$es_scheme}://{$es_host}:{$es_port}";
       
+      $this->required = $required;
       $this->index = $es_index;
       $this->client = ClientBuilder::create()
         ->setHosts([$parsed_host])
@@ -76,7 +77,11 @@ class ElasticsearchLogTarget extends AbstractLogTarget {
         ->build();
   }
 
-  public function submit(AbstractLogSource $entry): bool {
+  public function isRequired(): bool {
+    return $this->required;
+  }
+
+  public function submit(AbstractLogSourceEntry $entry): bool {
     $document = $entry->getDocument();
     $hash = Helpers::contentHash($document);
 

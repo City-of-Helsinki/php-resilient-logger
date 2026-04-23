@@ -2,34 +2,31 @@
     "name": "city-of-helsinki/php-resilient-logger",
     "description": "PHP resilient logger for monolog",
     "license": "MIT",
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "require": {
-        "php": "^8.1",
-        "monolog/monolog": "^3.9",
-        "elasticsearch/elasticsearch": "^8",
-        "sebastian/diff": "^7.0"
+        "php": ">=8.1",
+        "monolog/monolog": "^2.0 || ^3.0",
+        "elasticsearch/elasticsearch": "^8.0",
+        "sebastian/diff": "^5.0 || ^6.0 || ^7.0"
     },
     "require-dev": {
         "behat/mink": "^1.12",
         "phpspec/prophecy": "^1.20",
         "phpspec/prophecy-phpunit": "^2.3",
-        "phpunit/phpunit": "^12.0",
-        "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+        "phpunit/phpunit": "^10.5 || ^11.5"
     },
     "config": {
         "allow-plugins": {
             "php-http/discovery": true,
             "phpstan/extension-installer": true,
-            "tbachert/spi": true,
-            "dealerdirect/phpcodesniffer-composer-installer": true
-        }
+            "tbachert/spi": true
+        },
+        "sort-packages": true
     },
     "autoload": {
-		"psr-4": {
-			"ResilientLogger\\": "src/"
-		}
-	},
+        "psr-4": {
+            "ResilientLogger\\": "src/"
+        }
+    },
     "autoload-dev": {
         "psr-4": {
             "ResilientLogger\\Tests\\": "tests/src/"

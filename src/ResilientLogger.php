@@ -7,10 +7,12 @@ namespace ResilientLogger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use ResilientLogger\Sources\AbstractLogSource;
+use ResilientLogger\Sources\AbstractLogSourceEntry;
 use ResilientLogger\Targets\AbstractLogTarget;
 use ResilientLogger\Types as Type;
 use ResilientLogger\Sources\Types as SourceTypes;
 use ResilientLogger\Utils\Helpers;
+use ResilientLogger\Utils\ReflectHelpers;
 
 /**
  * @phpstan-import-type ResilientLoggerOptions from Types
@@ -35,10 +37,10 @@ class ResilientLogger {
     'clear_sent_entries' => false,
   ];
 
-  private static ?LoggerInterface $internalLogger;
+  private static ?LoggerInterface $internalLogger = null;
 
   /**
-   * @param class-string<AbstractLogSource>[] $sources
+   * @param AbstractLogSource[] $sources
    * @param AbstractLogTarget[] $targets
    * @param int $batchLimit
    * @param int $chunkSize
@@ -68,13 +70,19 @@ class ResilientLogger {
       ];
   }
 
+  private static function getClassOrFactoryProp(array $config, string $context): mixed {
+      return $config['factory'] ?? $config['class'] ?? throw new \InvalidArgumentException(
+          "Log $context configuration missing 'factory' or 'class' key."
+      );
+  }
+
   /**
    * @param ResilientLoggerOptions $options
    */
   static function create(array $options): static {
     $options = Helpers::mergeOptions($options, self::$DEFAULT_OPTIONS);
 
-    foreach (static::getSchema() as $key => $tuple) {
+    foreach (self::getSchema() as $key => $tuple) {
       // Destructure the tuple into meaningful variables
       [$validator, $label] = $tuple;
       if (!isset($options[$key]) || !$validator($options[$key])) {
@@ -86,37 +94,28 @@ class ResilientLogger {
       }
     }
 
-    /** @var class-string<AbstractLogSource>[] $sources */
+    /** @var AbstractLogSource[] $sources */
     $sources = [];
 
     /** @var LogSourceConfig $sourceConfig */
-    $sourceConfig = [
+    $commonConfig = [
       "environment" => $options["environment"],
       "origin" => $options["origin"]
     ];
 
     foreach ($options["sources"] as $source) {
-      $sourceClassName = $source["class"];
-
-      if (!is_subclass_of($sourceClassName, AbstractLogSource::class)) {
-        throw new \Exception(sprintf("%s is not sub-class of AbstractLogSource", $sourceClassName));
-      }
-
-      $sourceClassName::configure($sourceConfig);
-      $sources[] = $sourceClassName;
+      $classOrFactory = self::getClassOrFactoryProp($source, "Source");
+      $factory = ReflectHelpers::createFactory($classOrFactory, AbstractLogSource::class);
+      $sources[] = $factory(array_merge($source, $commonConfig));
     }
 
     /** @var AbstractLogTarget[] $targets */
     $targets = [];
 
     foreach ($options["targets"] as $target) {
-      $targetClassName = $target["class"];
-
-      if (!is_subclass_of($targetClassName, AbstractLogTarget::class)) {
-        throw new \Exception(sprintf("%s is not sub-class of AbstractLogTarget", $targetClassName));
-      }
-
-      $targets[] = $targetClassName::create($target);
+      $classOrFactory = self::getClassOrFactoryProp($target, "Target");
+      $factory = ReflectHelpers::createFactory($classOrFactory, AbstractLogTarget::class);
+      $targets[] = $factory(array_merge($target, $commonConfig));
     }
 
     return new static(
@@ -128,19 +127,37 @@ class ResilientLogger {
     );
   }
 
+  /**
+   * Returns list of configured log sources
+   * 
+   * @return AbstractLogSource[]
+   */
+  public function getSources(): array {
+    return $this->sources;
+  }
+
+  /**
+   * Returns list of configured log targets
+   * 
+   * @return AbstractLogTarget[]
+   */
+  public function getTargets(): array {
+    return $this->targets;
+  }
+
   public static function setInternalLogger(LoggerInterface $logger): void {
     self::$internalLogger = $logger;
   }
 
   public static function getInternalLogger(): LoggerInterface {
-    if (static::$internalLogger === null) {
-      static::$internalLogger = new NullLogger();
+    if (self::$internalLogger === null) {
+      self::$internalLogger = new NullLogger();
     }
 
-    return static::$internalLogger;
+    return self::$internalLogger;
   }
 
-  public function submit(AbstractLogSource $entry): bool {
+  public function submit(AbstractLogSourceEntry $entry): bool {
     foreach ($this->targets as $target) {
       $submitted = $target->submit($entry);
 
@@ -178,11 +195,11 @@ class ResilientLogger {
   }
 
   /**
-   * @return \Generator<AbstractLogSource>
+   * @return \Generator<AbstractLogSourceEntry>
    */
   public function getUnsentEntries(): \Generator {
     foreach ($this->sources as $source) {
-      foreach ($source::getUnsentEntries($this->chunkSize) as $entry) {
+      foreach ($source->getUnsentEntries($this->chunkSize) as $entry) {
         yield $entry;
       }
     }
@@ -190,7 +207,7 @@ class ResilientLogger {
   
   public function clearSentEntries(): void {
     foreach ($this->sources as $source) {
-      $source::clearSentEntries($this->storeOldEntriesDays);
+      $source->clearSentEntries($this->storeOldEntriesDays);
     }
   }
 }
