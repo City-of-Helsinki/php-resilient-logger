@@ -9,12 +9,14 @@ use ResilientLogger\Targets\AbstractLogTarget;
  * @phpstan-type ResilientLoggerOptions array{
  *   sources: array<
  *     array{
- *       class: class-string<AbstractLogSource>,
+ *       class?: class-string<AbstractLogSource>,
+ *       factory?: callable,
  *     }
  *   >,
  *   targets: array<
  *     array{
- *       class: class-string<AbstractLogTarget>,
+ *       class?: class-string<AbstractLogTarget>,
+ *       factory?: callable,
  *     }
  *   >,
  *   environment: string,
