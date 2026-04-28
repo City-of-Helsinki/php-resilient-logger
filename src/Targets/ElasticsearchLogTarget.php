@@ -27,6 +27,7 @@ class ElasticsearchLogTarget implements AbstractLogTarget {
     'es_host' => 'localhost',
     'es_port' => 9200,
     'es_scheme' => 'https',
+    'required' => true,
   ];
 
   /**
