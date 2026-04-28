@@ -9,14 +9,12 @@ use Psr\Log\NullLogger;
 use ResilientLogger\Sources\AbstractLogSource;
 use ResilientLogger\Sources\AbstractLogSourceEntry;
 use ResilientLogger\Targets\AbstractLogTarget;
-use ResilientLogger\Types as Type;
-use ResilientLogger\Sources\Types as SourceTypes;
 use ResilientLogger\Utils\Helpers;
 use ResilientLogger\Utils\ReflectHelpers;
 
 /**
- * @phpstan-import-type ResilientLoggerOptions from Types
- * @phpstan-import-type LogSourceConfig from SourceTypes
+ * @phpstan-import-type ResilientLoggerOptions from \ResilientLogger\Types
+ * @phpstan-import-type LogSourceConfig from \ResilientLogger\Sources\Types
  */
 class ResilientLogger {
   /**
@@ -79,7 +77,7 @@ class ResilientLogger {
   /**
    * @param ResilientLoggerOptions $options
    */
-  static function create(array $options): static {
+  static function create(array $options): self {
     $options = Helpers::mergeOptions($options, self::$DEFAULT_OPTIONS);
 
     foreach (self::getSchema() as $key => $tuple) {
@@ -97,7 +95,7 @@ class ResilientLogger {
     /** @var AbstractLogSource[] $sources */
     $sources = [];
 
-    /** @var LogSourceConfig $sourceConfig */
+    /** @var LogSourceConfig $commonConfig */
     $commonConfig = [
       "environment" => $options["environment"],
       "origin" => $options["origin"]
@@ -118,7 +116,7 @@ class ResilientLogger {
       $targets[] = $factory(array_merge($target, $commonConfig));
     }
 
-    return new static(
+    return new ResilientLogger(
       $sources,
       $targets,
       $options["batch_limit"],

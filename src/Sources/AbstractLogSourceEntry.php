@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace ResilientLogger\Sources;
 
-use \ResilientLogger\Sources\Types;
-
 /**
- * @phpstan-import-type AuditLogDocument from Types
+ * @phpstan-import-type AuditLogDocument from \ResilientLogger\Sources\Types
  */
 interface AbstractLogSourceEntry {
   /**

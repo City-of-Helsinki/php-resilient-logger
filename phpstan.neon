@@ -10,10 +10,3 @@ parameters:
     - vendor
   level: 5
   treatPhpDocTypesAsCertain: false
-  ignoreErrors:
-    -
-      message: '#^Unsafe usage of new static#'
-      path: src/Targets/AbstractLogTarget.php
-    -
-      message: '#^Unsafe usage of new static#'
-      path: src/ResilientLogger.php      

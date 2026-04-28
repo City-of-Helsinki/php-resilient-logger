@@ -9,15 +9,15 @@ namespace ResilientLogger\Sources;
  * }
  *
  * @phpstan-type AuditLogEvent array{
- *   actor: array,
+ *   actor: array<string, mixed>,
  *   date_time: \DateTimeInterface,
  *   operation: string,
  *   origin: string,
- *   target: array,
+ *   target: array<string, mixed>,
  *   environment: string,
  *   message: string,
  *   level?: int,
- *   extra?: array
+ *   extra?: array<string, mixed>,
  * }
  *
  * @phpstan-type AuditLogDocument array{

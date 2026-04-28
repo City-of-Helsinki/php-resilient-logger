@@ -10,13 +10,10 @@ use ResilientLogger\Utils\Helpers;
 use Elastic\Elasticsearch\ClientBuilder;
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
-
-use Psr\Log\LoggerInterface;
 use ResilientLogger\ResilientLogger;
-use \ResilientLogger\Sources\Types;
 
 /**
- * @phpstan-import-type AuditLogDocument from Types
+ * @phpstan-import-type AuditLogDocument from \ResilientLogger\Sources\Types
  */
 class ElasticsearchLogTarget implements AbstractLogTarget {
   private const ES_STATUS_CREATED = "created";

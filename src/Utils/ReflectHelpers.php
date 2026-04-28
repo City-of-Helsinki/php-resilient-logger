@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace ResilientLogger\Utils;
 
-use ResilientLogger\Exceptions\MissingContextException;
-
 class ReflectHelpers {
   static function isFullyQualifiedClassName(mixed $target): bool {
     return is_string($target) && class_exists($target);
