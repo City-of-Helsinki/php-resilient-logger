@@ -12,9 +12,9 @@ class MockLogTarget implements AbstractLogTarget {
   /** @var Array<AbstractLogSourceEntry> */
   public array $entries = [];
 
-  public function __construct() {
+  public function __construct(array $options) {
     $this->result = true;
-    $this->required = true;
+    $this->required = $options["required"] ?? true;
   }
   
   public function submit(AbstractLogSourceEntry $entry): bool {
@@ -31,10 +31,6 @@ class MockLogTarget implements AbstractLogTarget {
 
   public function setResult(bool $result) {
     $this->result = $result;
-  }
-
-  public function setRequired(bool $required) {
-    $this->required = $required;
   }
 }
 
