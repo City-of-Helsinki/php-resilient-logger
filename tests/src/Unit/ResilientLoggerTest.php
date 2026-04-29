@@ -116,6 +116,33 @@ class ResilientLoggerTest extends TestCase {
     $this->assertEquals(0, $instanceSource1["instanceValue"]);
     $this->assertEquals(1, $instanceSource2["instanceValue"]);
   }
+
+  public function testRequiredOverride() {
+    $options = [
+      "sources" => [["class" => MockLogSource::class]],
+      "targets" => [["class" => MockLogTarget::class, "required" => false]],
+      "environment" => "test",
+      "origin" => "test",
+      "batch_limit" => 5000,
+      "chunk_size" => 500,
+      "store_old_entries_days" => 30,
+    ];
+
+    $resilientLogger = ResilientLogger::create($options);
+    
+    /** @var MockLogSource */
+    $source = $resilientLogger->getSources()[0];
+    /** @var MockLogTarget */
+    $target = $resilientLogger->getTargets()[0];
+
+    $target->setResult(false);
+
+    $entry = $source->create(0, "Hello");
+    $entryId = $entry->getId();
+
+    $results = $resilientLogger->submitUnsentEntries();
+    $this->assertFalse($results[$entryId]);
+  }
 }
 
 ?>

@@ -114,6 +114,16 @@ class Helpers {
         "Invalid value_as_dict input. Expected 'string | array', got '{$valueType}'"
     );
   }
+
+  static function arrayHasAny(array $array, callable $callback): bool {
+    foreach ($array as $key => $value) {
+        if ($callback($value, $key)) {
+            return true;
+        }
+    }
+
+    return false;
+  }
 }
 
 ?>
