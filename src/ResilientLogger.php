@@ -37,6 +37,8 @@ class ResilientLogger {
 
   private static ?LoggerInterface $internalLogger = null;
 
+  private bool $overrideRequired = false;
+
   /**
    * @param AbstractLogSource[] $sources
    * @param AbstractLogTarget[] $targets
@@ -50,7 +52,14 @@ class ResilientLogger {
     private int $batchLimit,
     private int $chunkSize,
     private int $storeOldEntriesDays,
-  ) {}
+  ) {
+    $hasRequiredTargets = Helpers::arrayHasAny(
+      $this->targets,
+      fn(AbstractLogTarget $item) => $item->isRequired()
+    );
+
+    $this->overrideRequired = ($hasRequiredTargets === false);
+  }
 
   /**
    * Define the configuration schema and validation rules.
@@ -156,15 +165,17 @@ class ResilientLogger {
   }
 
   public function submit(AbstractLogSourceEntry $entry): bool {
+    $success = true;
+
     foreach ($this->targets as $target) {
       $submitted = $target->submit($entry);
-
-      if (!$submitted && $target->isRequired()) {
-        return false;
+    
+      if (!$submitted && ($target->isRequired() || $this->overrideRequired)) {
+        $success = false;
       }
     }
 
-    return true;
+    return $success;
   }
 
   /**
