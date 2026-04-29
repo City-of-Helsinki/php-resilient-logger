@@ -11,6 +11,7 @@ use Elastic\Elasticsearch\ClientBuilder;
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
 use ResilientLogger\ResilientLogger;
+use Psr\Http\Client\ClientInterface;
 
 /**
  * @phpstan-import-type AuditLogDocument from \ResilientLogger\Sources\Types
@@ -28,6 +29,7 @@ class ElasticsearchLogTarget implements AbstractLogTarget {
     'es_port' => 9200,
     'es_scheme' => 'https',
     'required' => true,
+    'http_client' => null,
   ];
 
   /**
@@ -40,6 +42,7 @@ class ElasticsearchLogTarget implements AbstractLogTarget {
    *   es_port?: int,
    *   es_scheme?: string,
    *   required?: bool,
+   *   http_client?: ClientInterface,
    * } $options
    */
   public function __construct(array $options) {
@@ -52,6 +55,7 @@ class ElasticsearchLogTarget implements AbstractLogTarget {
         'es_port' => $es_port,
         'es_scheme' => $es_scheme,
         'required' => $required,
+        'http_client' => $httpClient,
       ) = $options + $this->defaultOptions;
 
       if (!empty($es_url)) {
@@ -69,10 +73,16 @@ class ElasticsearchLogTarget implements AbstractLogTarget {
       
       $this->required = $required;
       $this->index = $es_index;
-      $this->client = ClientBuilder::create()
+      
+      $clientBuilder = ClientBuilder::create()
         ->setHosts([$parsed_host])
-        ->setBasicAuthentication($es_username, $es_password)
-        ->build();
+        ->setBasicAuthentication($es_username, $es_password);
+
+      if ($httpClient !== null) {
+        $clientBuilder->setHttpClient($httpClient);
+      }
+
+      $this->client = $clientBuilder->build();
   }
 
   public function isRequired(): bool {
