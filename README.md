@@ -233,7 +233,9 @@ Use `ElasticsearchLogTarget` as a reference when implementing custom targets.
 
 ## Related Projects
 
-* [Drupal Resilient Logger Module](https://github.com/City-of-Helsinki/drupal-module-helfi-resilient-logger) — wraps this library for Drupal and provides cron integration.
+* [Drupal Resilient Logger Module](https://github.com/City-of-Helsinki/drupal-module-helfi-api-base/tree/main/src/AuditLog) — wraps this library for Drupal and provides cron integration.
+* [Wordpress Resilient Logger Module](https://github.com/City-of-Helsinki/wp-resilient-logger) — wraps this library for Wordpress and provides cron integration.
+
 
 ---
 
