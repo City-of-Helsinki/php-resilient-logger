@@ -90,7 +90,7 @@ class ElasticsearchLogTarget implements AbstractLogTarget {
   }
 
   public function submit(AbstractLogSourceEntry $entry): bool {
-    $document = $entry->getDocument();
+    $document = Helpers::serializeDocument($entry->getDocument());
     $hash = Helpers::contentHash($document);
 
     try {

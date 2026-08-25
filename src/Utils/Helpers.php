@@ -37,6 +37,27 @@ class Helpers {
   }
 
   /**
+   * Creates a copy of a document with serialized fields.
+   *
+   * Date objects are converted to yyyy-MM-ddThh:mm:ss.SSSZ
+   * strings in UTC first.
+   *
+   * @param array<mixed> $document The document to be serialized.
+   * @return array<mixed> A copy of the document, free of date objects.
+   */
+  static function serializeDocument(array $document): array {
+    array_walk_recursive($document, static function (mixed &$value): void {
+      if ($value instanceof \DateTimeInterface) {
+        $value = \DateTimeImmutable::createFromInterface($value)
+          ->setTimezone(new \DateTimeZone('UTC'))
+          ->format('Y-m-d\TH:i:s.v\Z');
+      }
+    });
+
+    return $document;
+  }
+
+  /**
    * Calculates a stable content based of the input data.
    * The contents is first sorted and the sorted data is then hashed.
    * 
