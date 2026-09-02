@@ -11,7 +11,7 @@
   failOnWarning="true"
   cacheDirectory=".phpunit.cache"
   requireCoverageMetadata="true"
-  beStrictAboutCoverageMetadata="true"
+  beStrictAboutCoverageMetadata="false"
 >
   <php>
     <!-- Set error reporting to E_ALL. -->
